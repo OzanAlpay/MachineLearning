@@ -1,8 +1,28 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import random
 
+#190201012 -- Ozan Alpay -- CENG463 - Introduction to Machine Learning HW#2
+# Homework Structure
+#- 1 Part#1
+#- 2 Part#2
+#- 3 GetDistanceFunction which is a helper method for Part#3d
+#- 4 Part#3d
+#- 5 RestoreCentroids function which is a helper method for Part#3c
+#- 6 Part#3
+#- 7 Part#3a
+#- 8 Part#3b
+#- 9 Part#4
+#- 10 Part#5
+#- 11 Part#6
+#This dictionary will be used in Part6 , to assign colors to each of cluster type
+colors_dictionary = {};
+colors_dictionary[0] = 'r';
+colors_dictionary[1] = 'g';
+colors_dictionary[2] = 'b';
+colors_dictionary[3] = 'c';
+colors_dictionary[4] = 'm';
+colors_dictionary[5] = 'k';
 # Part 1: Load the data
 data = np.loadtxt('iris.data')
 
@@ -20,7 +40,8 @@ s.set_edgecolors = s.set_facecolors = lambda *args:None
 def getDistance(centroid,sample):
     totalDistance = (sample[0]-centroid[0])**2 + (sample[2]-centroid[1])**2 + (sample[3]-centroid[2])**2;
     return totalDistance;
-#Calculates total cost of distance between current centroids and clusters    
+#Calculates total cost of distance between current centroids and clusters
+# Part 3d: Calculation of cost (optimization objective)
 def calc_cost(centroids, cluster_ids, data):
     dist = []
     for i in range(len(data)):
@@ -42,7 +63,8 @@ def restore_centroids(num_of_elements,cluster_id_set,cluster_id):
         return num_of_elements;
     else:
         return num_of_elements[:cluster_id].append(1) + num_of_elements[cluster_id];
-
+# Part 3: K-means implementation
+# Part 3a: Random initialization for cluster centroids within data range
 # Called at start
 # Random initialization for cluster centroids within data range
 def init_centroids(k, data):
@@ -57,6 +79,7 @@ def init_centroids(k, data):
 centroids = init_centroids(3,data);
 #print "First randomly selected centroids are : "
 #print centroids;
+#Part 3b: Cluster assignments for data samples
 #Cluster assignments for data samples
 def assign_cluster(centroids, data):
     cluster_id = []
@@ -72,6 +95,7 @@ cluster_ids = assign_cluster(centroids,data);
 print "Calculation Cost : "
 print calc_cost(centroids,cluster_ids,data);
 #print cluster_ids;
+# Part 3c: Recalculate cluster centroids
 #Recalculate cluster centroids to decrease to value of cost function
 def calc_centroids(cluster_ids, data):
     centroids = [];
@@ -83,7 +107,7 @@ def calc_centroids(cluster_ids, data):
         #After that if I find a data with cluster 1 I will increase middle element 1
         #[Because its index 1] and it will be [0,1,0] and goes on like that
     for cluster_id in cluster_ids:
-        #Now for every cluster_id i will increase my array appropriate element
+        #Now for every cluster_id i will increase my appropriate array element
         #I created restore_centroids function to handle some extraordinary cases
         #I am going to use that in here
         try :
@@ -97,7 +121,8 @@ def calc_centroids(cluster_ids, data):
     #To find centroid for k=t's x value i used that formula
     #Add all data's x values which belongs to t cluster
     #Then divide it with number of datas which belong to cluster t
-    #In the for loops below first i calculated , and then i divide
+    #In the for loops below first i calculated total amount ,
+    #Then i divide total amount to number of items
     for i in range(len(data)):
         cluster_id = cluster_ids[i];
         sample = data[i];
@@ -111,11 +136,11 @@ def calc_centroids(cluster_ids, data):
     return np.array(centroids)
 centroids = calc_centroids(cluster_ids,data);
 #Calculation of cost (optimization objective)
-
 print "Calculation Cost : "
 print calc_cost(centroids,cluster_ids,data);
-# TODO
 #Part 4: Implement the function that runs k-means on the data with 50 random initializations. For all trials, calculate and record cost values at each iteration and final cluster assignments.
+# It calculates kmeans with k = {2,6} for every k there will be 50 random centroids,
+# Makes one iteration and picks the best one for the k
 def run_kmeans(k, data):
     print "K means runs with number of %d cluster " %k;
     cost_array_all = []
@@ -136,20 +161,49 @@ def run_kmeans(k, data):
     print "MIN COST IS ANOTHER WAY : "
     print cost_final_all[ind];
     return cluster_ids_all[ind], cost_final_all[ind]
-run_kmeans(3,data);
-# TODO    
-#  Run the k-means algorithm with k between 1 and 6. Plot the final cost vs k curve and observe the elbow to determine the best k.
+# Part 5: Run the k-means algorithm with k between 1 and 6. Plot the final cost vs k curve and observe the elbow to determine the best k.
 costs=[];
 for k in range (2,6):
     costs.append(run_kmeans(k,data));
-print costs;
-
 plt.figure(figsize=fig_size)
 plt.xlabel('k', fontsize=32)
 plt.ylabel('Optimized Cost', fontsize=32)
-# TODO
-# With the best k value, run k-means on the data. Plot the cost vs iteration curve and show 1st, 3rd and 4th features in 3D using different colors for different clusters.
+cost_array = [];
+for i in range (0,4):
+    cost_array.append(costs[i][1]);
+plt.plot([i for i in range(2,2+len(cost_array))],cost_array);
+
+plt.show();
+#Elbow is generally at k = 3;
+# Part 6: With the best k value, run k-means on the data. Plot the cost vs iteration curve and show 1st, 3rd and 4th features in 3D using different colors for different clusters.
 plt.figure(figsize=fig_size)
 plt.xlabel('Iteration No.', fontsize=32)
 plt.ylabel('Cost', fontsize=32)
-# YOUR CODE HERE
+cost_array = [];
+cluster_ids = [];
+centroids_for_this_run = init_centroids(3,data);
+iteration_no = [];
+for i in range(0,50):
+    iteration_no.append(i);
+    print "Centroids_for_this_run : ";
+    print centroids_for_this_run;
+    cluster_ids.append(assign_cluster(centroids_for_this_run,data));
+    cost_array.append(calc_cost(centroids_for_this_run,cluster_ids[i],data));
+    centroids_for_this_run = calc_centroids(cluster_ids[i],data);    
+plt.plot([i for i in range(0,len(cost_array))],cost_array);
+print "LAST PART";
+print len(cluster_ids);
+fig_size = (30,20)
+marker_size = 60
+fig = plt.figure(figsize=fig_size)
+ax = fig.add_subplot(111, projection='3d')
+for i in range(0,len(data)):
+    print cluster_ids[49][i];
+    cluster_id = cluster_ids[49][i];
+    s = ax.scatter(data[i][0],data[i][2],data[i][3],marker='o', c=colors_dictionary[cluster_id], s=marker_size);
+#s = ax.scatter(data[:,0],data[:,2],data[:,3], marker='o', c='b', s=marker_size)
+s.set_edgecolors = s.set_facecolors = lambda *args:None
+
+    
+    
+    
