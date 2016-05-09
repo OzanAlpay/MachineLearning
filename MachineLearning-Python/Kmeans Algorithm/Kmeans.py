@@ -12,9 +12,10 @@ from mpl_toolkits.mplot3d import Axes3D
 #- 6 Part#3
 #- 7 Part#3a
 #- 8 Part#3b
-#- 9 Part#4
-#- 10 Part#5
-#- 11 Part#6
+#- 9 Part#3c
+#- 10 Part#4
+#- 11 Part#5
+#- 12 Part#6
 #This dictionary will be used in Part6 , to assign colors to each of cluster type
 colors_dictionary = {};
 colors_dictionary[0] = 'r';
@@ -40,6 +41,14 @@ s.set_edgecolors = s.set_facecolors = lambda *args:None
 def getDistance(centroid,sample):
     totalDistance = (sample[0]-centroid[0])**2 + (sample[2]-centroid[1])**2 + (sample[3]-centroid[2])**2;
     return totalDistance;
+    
+def CompareTwoCentroids(first_centroid,second_centroid):
+    
+    if len(first_centroid) != len(second_centroid):
+        return False;
+    if(first_centroid==second_centroid).all():
+        return True;
+    return False;
 #Calculates total cost of distance between current centroids and clusters
 # Part 3d: Calculation of cost (optimization objective)
 def calc_cost(centroids, cluster_ids, data):
@@ -92,8 +101,6 @@ def assign_cluster(centroids, data):
     #print "Cluster id length : %d" % len(cluster_id);
     return np.array(cluster_id)
 cluster_ids = assign_cluster(centroids,data);
-print "Calculation Cost : "
-print calc_cost(centroids,cluster_ids,data);
 #print cluster_ids;
 # Part 3c: Recalculate cluster centroids
 #Recalculate cluster centroids to decrease to value of cost function
@@ -136,73 +143,96 @@ def calc_centroids(cluster_ids, data):
     return np.array(centroids)
 centroids = calc_centroids(cluster_ids,data);
 #Calculation of cost (optimization objective)
-print "Calculation Cost : "
-print calc_cost(centroids,cluster_ids,data);
 #Part 4: Implement the function that runs k-means on the data with 50 random initializations. For all trials, calculate and record cost values at each iteration and final cluster assignments.
 # It calculates kmeans with k = {2,6} for every k there will be 50 random centroids,
 # Makes one iteration and picks the best one for the k
 def run_kmeans(k, data):
-    print "K means runs with number of %d cluster " %k;
     cost_array_all = []
     cost_final_all = []
     cluster_ids_all =[]
     for i in range(0,50):
-        centroids_for_this_run = init_centroids(k,data);
-        cluster_ids_all.append(assign_cluster(centroids_for_this_run,data));
-        centroids_for_this_run = (calc_centroids(cluster_ids_all[i],data));
-        cost_final_all.append(calc_cost(centroids_for_this_run,cluster_ids_all[i],data));
-        cost_array_all.append(centroids_for_this_run);
+        helper_array = [];
+        #I created in a helper array here , i know it is not required;
+        #However whenever i directly create an inner array in cost_array_all
+        #and append values to it i get runtime errors, so i decided to make an
+        #helperarray and before break , add helper_array to cost_array_all
+        centroids_before = init_centroids(k,data);
+        while True:
+            cluster_ids = assign_cluster(centroids_before,data);
+            centroids_after = calc_centroids(cluster_ids,data);
+            cost = calc_cost(centroids_after,cluster_ids,data);
+            helper_array.append(cost);
+            #every iteration i added cost to helper array
+            #I wrote a CompareTwoCentroids method to be sure about they are equal
+            if CompareTwoCentroids(centroids_before,centroids_after):
+                #if they are equal first we make last assignments before exiting loop
+                #add last cluster_ids to cluster_ids_all array
+                cluster_ids_all.append(cluster_ids);
+                #add smallest cost which we found at last iteration
+                #we add it to cost_final_array
+                #and add helper array to cost_array_all
+                
+                cost_array_all.append(helper_array);
+                cost_final_all.append(cost);
+                break;
+            centroids_before = centroids_after;
     ind = np.argmin(cost_final_all)
-    print cost_final_all;
-    #print "CLUSTER_IDS_ALL";
-    #print cluster_ids_all;
-    print "MIN COST IS : "
-    print min(cost_final_all);
-    print "MIN COST IS ANOTHER WAY : "
-    print cost_final_all[ind];
-    return cluster_ids_all[ind], cost_final_all[ind]
+    return cluster_ids_all[ind], cost_array_all[ind]
 # Part 5: Run the k-means algorithm with k between 1 and 6. Plot the final cost vs k curve and observe the elbow to determine the best k.
+
 costs=[];
 for k in range (2,6):
     costs.append(run_kmeans(k,data));
+
 plt.figure(figsize=fig_size)
 plt.xlabel('k', fontsize=32)
 plt.ylabel('Optimized Cost', fontsize=32)
 cost_array = [];
 for i in range (0,4):
-    cost_array.append(costs[i][1]);
+    cost_array.append(min(costs[i][1]));
 plt.plot([i for i in range(2,2+len(cost_array))],cost_array);
-
 plt.show();
 #Elbow is generally at k = 3;
 # Part 6: With the best k value, run k-means on the data. Plot the cost vs iteration curve and show 1st, 3rd and 4th features in 3D using different colors for different clusters.
+#This part draws iteration vs cost
+#Actually it is very simple i just get number of iteration frrom my generator
+#and then get the cost values from costs[1] arra
+#then draw them
 plt.figure(figsize=fig_size)
 plt.xlabel('Iteration No.', fontsize=32)
 plt.ylabel('Cost', fontsize=32)
-cost_array = [];
-cluster_ids = [];
-centroids_for_this_run = init_centroids(3,data);
-iteration_no = [];
-for i in range(0,50):
-    iteration_no.append(i);
-    print "Centroids_for_this_run : ";
-    print centroids_for_this_run;
-    cluster_ids.append(assign_cluster(centroids_for_this_run,data));
-    cost_array.append(calc_cost(centroids_for_this_run,cluster_ids[i],data));
-    centroids_for_this_run = calc_centroids(cluster_ids[i],data);    
-plt.plot([i for i in range(0,len(cost_array))],cost_array);
-print "LAST PART";
-print len(cluster_ids);
+costs = [];
+costs = run_kmeans(3,data);
+plt.plot([i for i in range(0,(len(costs[1])))], costs[1]);
+#cost_array = [];
+#cluster_ids = [];
+#centroids_for_this_run = init_centroids(3,data);
+#iteration_no = [];
+#for i in range(0,50):
+    #iteration_no.append(i);
+    #print "Centroids_for_this_run : ";
+    #print centroids_for_this_run;
+    #cluster_ids.append(assign_cluster(centroids_for_this_run,data));
+    #cost_array.append(calc_cost(centroids_for_this_run,cluster_ids[i],data));
+    #centroids_for_this_run = calc_centroids(cluster_ids[i],data);
+    
+#plt.plot([i for i in range(0,len(cost_array))],cost_array);
+#This part draws clusters with colors
+#I get clusters from costs[0][i] for each sample
+#then find the appropriate color from colors_dictionary that i defined at the begining
+#then just draw them
 fig_size = (30,20)
 marker_size = 60
 fig = plt.figure(figsize=fig_size)
 ax = fig.add_subplot(111, projection='3d')
 for i in range(0,len(data)):
-    print cluster_ids[49][i];
-    cluster_id = cluster_ids[49][i];
+    
+    cluster_id = costs[0][i];
     s = ax.scatter(data[i][0],data[i][2],data[i][3],marker='o', c=colors_dictionary[cluster_id], s=marker_size);
 #s = ax.scatter(data[:,0],data[:,2],data[:,3], marker='o', c='b', s=marker_size)
 s.set_edgecolors = s.set_facecolors = lambda *args:None
+
+
 
     
     
