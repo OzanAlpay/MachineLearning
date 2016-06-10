@@ -7,15 +7,16 @@ from mpl_toolkits.mplot3d import Axes3D
 #- 1 Part#1
 #- 2 Part#2
 #- 3 GetDistanceFunction which is a helper method for Part#3d
-#- 4 Part#3d
-#- 5 RestoreCentroids function which is a helper method for Part#3c
-#- 6 Part#3
-#- 7 Part#3a
-#- 8 Part#3b
-#- 9 Part#3c
-#- 10 Part#4
-#- 11 Part#5
-#- 12 Part#6
+#- 4 CompareTwoCentroids function which is required for run_kmeans function
+#- 5 Part#3d
+#- 6 RestoreCentroids function which is a helper method for Part#3c
+#- 7 Part#3
+#- 8 Part#3a
+#- 9 Part#3b
+#- 10 Part#3c
+#- 11 Part#4
+#- 12 Part#5
+#- 13 Part#6
 #This dictionary will be used in Part6 , to assign colors to each of cluster type
 colors_dictionary = {};
 colors_dictionary[0] = 'r';
@@ -183,16 +184,18 @@ def run_kmeans(k, data):
 costs=[];
 for k in range (2,6):
     costs.append(run_kmeans(k,data));
-
 plt.figure(figsize=fig_size)
 plt.xlabel('k', fontsize=32)
 plt.ylabel('Optimized Cost', fontsize=32)
 cost_array = [];
 for i in range (0,4):
     cost_array.append(min(costs[i][1]));
+print "Minimum values for k values 2 to 6:"
+print cost_array;
 plt.plot([i for i in range(2,2+len(cost_array))],cost_array);
 plt.show();
 #Elbow is generally at k = 3;
+
 # Part 6: With the best k value, run k-means on the data. Plot the cost vs iteration curve and show 1st, 3rd and 4th features in 3D using different colors for different clusters.
 #This part draws iteration vs cost
 #Actually it is very simple i just get number of iteration frrom my generator
@@ -204,19 +207,7 @@ plt.ylabel('Cost', fontsize=32)
 costs = [];
 costs = run_kmeans(3,data);
 plt.plot([i for i in range(0,(len(costs[1])))], costs[1]);
-#cost_array = [];
-#cluster_ids = [];
-#centroids_for_this_run = init_centroids(3,data);
-#iteration_no = [];
-#for i in range(0,50):
-    #iteration_no.append(i);
-    #print "Centroids_for_this_run : ";
-    #print centroids_for_this_run;
-    #cluster_ids.append(assign_cluster(centroids_for_this_run,data));
-    #cost_array.append(calc_cost(centroids_for_this_run,cluster_ids[i],data));
-    #centroids_for_this_run = calc_centroids(cluster_ids[i],data);
-    
-#plt.plot([i for i in range(0,len(cost_array))],cost_array);
+
 #This part draws clusters with colors
 #I get clusters from costs[0][i] for each sample
 #then find the appropriate color from colors_dictionary that i defined at the begining
@@ -226,7 +217,6 @@ marker_size = 60
 fig = plt.figure(figsize=fig_size)
 ax = fig.add_subplot(111, projection='3d')
 for i in range(0,len(data)):
-    
     cluster_id = costs[0][i];
     s = ax.scatter(data[i][0],data[i][2],data[i][3],marker='o', c=colors_dictionary[cluster_id], s=marker_size);
 #s = ax.scatter(data[:,0],data[:,2],data[:,3], marker='o', c='b', s=marker_size)

@@ -47,11 +47,8 @@ plt.show()
 
 #  Using the two datatype you have chosen, extract the 2D Gaussian (Normal) distribution parameters. Numpy functions are called here to be used  for validation of your results.
 mx0 = np.mean(data0[:,2])
-print mx0
 my0 = np.mean(data0[:,3])
-print my0
 cov0 = np.cov(data0[:,2:4].T)
-print cov0
 mx1 = np.mean(data1[:,2])
 my1 = np.mean(data1[:,3])
 cov1 = np.cov(data1[:,2:4].T)
